@@ -1,17 +1,10 @@
-FROM node:22-alpine
-
-WORKDIR /app
-
-# Install dependencies first (better layer caching)
-COPY package*.json ./
-COPY prisma ./prisma/
-RUN npm ci
-
-# Copy source and build
+FROM node:lts-alpine
+ENV NODE_ENV=production
+WORKDIR /usr/src/app
+COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
+RUN npm install --production --silent && mv node_modules ../
 COPY . .
-RUN npx prisma generate
-RUN npm run build
-
 EXPOSE 3000
-
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+RUN chown -R node /usr/src/app
+USER node
+CMD ["npm", "start"]
